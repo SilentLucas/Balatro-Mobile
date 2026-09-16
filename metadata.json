@@ -1,0 +1,6 @@
+{
+  "name": "Poker Roguelike",
+  "description": "Roguelike deckbuilder mobile baseado em pôquer com avaliação determinística de mãos e pontuação.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
