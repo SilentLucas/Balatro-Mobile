@@ -1,6 +1,7 @@
 package com.example.poker
 
 import com.example.poker.deck.Deck
+import com.example.poker.deck.DeckManager
 import com.example.poker.evaluator.HandType
 import com.example.poker.evaluator.PokerHandEvaluator
 import com.example.poker.model.Card
@@ -78,6 +79,58 @@ class PokerSystemTest {
         deck.discard(drawn)
         assertEquals(47, deck.remainingCards)
         assertEquals(5, deck.discardedCardsCount)
+    }
+
+    @Test
+    fun `DeckManager deve gerenciar baralho com Fisher-Yates, descarte e remocao de cartas`() {
+        val manager = DeckManager()
+        assertEquals(52, manager.remainingInDrawPile)
+        assertEquals(0, manager.remainingInDiscardPile)
+        assertEquals(52, manager.totalCardsCount)
+
+        // Fisher-Yates com Seed determinística
+        val managerB = DeckManager()
+        manager.shuffle(Random(12345L))
+        managerB.shuffle(Random(12345L))
+
+        val cardsA = manager.getCardsInDrawPile().map { it.id }
+        val cardsB = managerB.getCardsInDrawPile().map { it.id }
+        assertEquals(cardsA, cardsB)
+
+        // Saque de mão
+        val hand = manager.draw(5)
+        assertEquals(5, hand.size)
+        assertEquals(47, manager.remainingInDrawPile)
+
+        // Descarte
+        manager.discard(hand)
+        assertEquals(5, manager.remainingInDiscardPile)
+
+        // Reciclar descarte de volta ao baralho
+        manager.recycleDiscardIntoDrawPile(Random(42L))
+        assertEquals(52, manager.remainingInDrawPile)
+        assertEquals(0, manager.remainingInDiscardPile)
+
+        // Remoção permanente de carta por ID (ex: destruição por Tarô)
+        val firstCardId = manager.getCardsInDrawPile().first().id
+        val removed = manager.removeCardById(firstCardId)
+        assertTrue(removed)
+        assertEquals(51, manager.totalCardsCount)
+    }
+
+    @Test
+    fun `PlayingCard deve criar baralho padrao de 52 cartas com UniqueIDs exclusivos`() {
+        val deck = com.example.poker.model.PlayingCard.createStandard52Deck()
+        assertEquals(52, deck.size)
+        val uniqueIds = deck.map { it.uniqueId }.toSet()
+        assertEquals(52, uniqueIds.size)
+
+        // Verifica distribuição por naipe e rank
+        assertEquals(4, deck.map { it.suit }.distinct().size)
+        assertEquals(13, deck.map { it.rank }.distinct().size)
+        for (suit in Suit.values()) {
+            assertEquals(13, deck.count { it.suit == suit })
+        }
     }
 
     // =========================================================================
